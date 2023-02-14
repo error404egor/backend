@@ -2,6 +2,7 @@ import sqlalchemy.exc
 from flask import Blueprint, jsonify, render_template, request, Response
 from data import db_session
 from data.model import Model
+from data.user import User
 from flask import Flask, abort, send_from_directory
 from sqlalchemy.sql import text
 import random
@@ -43,6 +44,41 @@ def get_model(id):
     except FileNotFoundError:
         abort(401)
 
+
+@users_blueprint.route('/register/user', methods=['GET'])
+def register_user():
+    try:
+        session = db_session.create_session()
+        username = request.args.get('username')
+        password = request.args.get('password')
+        email = request.args.get('email')
+        user_find = session.query(User).filter(User.name == username)
+        user_find_2 = session.query(User).filter(User.mail == email)
+        if session.query(user_find.exists()).scalar() or session.query(user_find_2.exists()).scalar():
+            return 'User or Email already exists', 1488
+
+        user = User(name=username, mail=email, password=password)
+        session.add(user)
+        session.commit()
+        return 'Build Succed', 200
+    except TypeError:
+        return 'Invalid Input', 1488
+
+
+@users_blueprint.route('/login/user', methods=['GET'])
+def login_user():
+    try:
+        session = db_session.create_session()
+        password = request.args.get('password')
+        email = request.args.get('email')
+        if session.query(User).filter(User.mail == email).count() == 0:
+            return 'User Not Found', 666
+        user = session.query(User).filter(User.mail == email).one()
+        if password != user.password:
+            return 'Password Invalid', 400
+        return 'Succed', 200
+    except TypeError:
+        return 'Invalid Input', 1488
 
 
 app = Flask(__name__)
