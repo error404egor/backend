@@ -6,6 +6,7 @@ from data.user import User
 from flask import Flask, abort, send_from_directory
 from sqlalchemy.sql import text
 import random
+import json
 
 Server = 'localhost'  # api сервер
 Port = 8080  # порт регистрации
@@ -45,24 +46,24 @@ def get_model(id):
         abort(401)
 
 
-@users_blueprint.route('/register/user', methods=['GET'])  # регистрация пользователя в базу данных
+@users_blueprint.route('/register/user', methods=['POST'])  # регистрация пользователя в базу данных
 def register_user():
     try:
         session = db_session.create_session()
-        username = request.args.get('username')
-        password = request.args.get('password')
-        email = request.args.get('email')
+        username = request.form['username']
+        password = request.form['password']
+        email = request.form['email']
         user_find = session.query(User).filter(User.name == username)
         user_find_2 = session.query(User).filter(User.mail == email)
         if session.query(user_find.exists()).scalar() or session.query(user_find_2.exists()).scalar():
-            return 'User or Email already exists', 1488
-
+            return json.dumps({'status': 'fail', 'message': 'User or Email already registered'}), 667
+        print(username)
         user = User(name=username, mail=email, password=password)
         session.add(user)
         session.commit()
-        return 'Build Succed', 200
+        return json.dumps({'status': 'success', 'message': 'Registered correctly'}), 200
     except TypeError:
-        return 'Invalid Input', 1489
+        return json.dumps({'status': 'fail', 'message': 'Authorization terminated due to unknown exception'}), 1490
 
 
 @users_blueprint.route('/login/user', methods=['GET'])  # авторизация пользователя в базу данных
@@ -72,13 +73,13 @@ def login_user():
         password = request.args.get('password')
         email = request.args.get('email')
         if session.query(User).filter(User.mail == email).count() == 0:
-            return 'User Not Found', 666
+            return json.dumps({'status': 'fail', 'message': 'User Not Found'}), 404
         user = session.query(User).filter(User.mail == email).one()
         if password != user.password:
-            return 'Password Invalid', 400
-        return 'Succed', 200
+            return json.dumps({'status': 'fail', 'message': 'Incorrect Password '}), 1487
+        return json.dumps({'status': 'success', 'message': 'User logined'}), 200
     except TypeError:
-        return 'Invalid Input', 1487
+        return json.dumps({'status': 'fail', 'message': 'Authorization terminated due to unknown exception'}), 1490
 
 
 app = Flask(__name__)  # создание flask приложения
