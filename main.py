@@ -13,7 +13,7 @@ Port = 8080  # порт регистрации
 
 db_session.global_init("db/data.db")  # подключение к базе данных
 
-users_blueprint = Blueprint(  # блюпринт для работы с базой данных
+users_blueprint = Blueprint(
     'hahaprof_app_api',
     __name__
 )
