@@ -78,7 +78,7 @@ def login_user():
             return 'Password Invalid', 400
         return 'Succed', 200
     except TypeError:
-        return 'Invalid Input', 1488
+        return 'Invalid Input', 1487
 
 
 app = Flask(__name__)  # создание flask приложения
