@@ -7,19 +7,19 @@ from flask import Flask, abort, send_from_directory
 from sqlalchemy.sql import text
 import random
 
-Server = 'localhost'
-Port = 8080
+Server = 'localhost'  # api сервер
+Port = 8080  # порт регистрации
 
 
+db_session.global_init("db/data.db")  # подключение к базе данных
 
-db_session.global_init("db/data.db")
-
-users_blueprint = Blueprint(
+users_blueprint = Blueprint(  # блюпринт для работы с базой данных
     'hahaprof_app_api',
     __name__
 )
 
-@users_blueprint.route('/api/get_all_models', methods=['GET'])
+
+@users_blueprint.route('/api/get_all_models', methods=['GET'])  # функция для получения словаря всех моделей
 def get_all_models():
     session = db_session.create_session()
     models = session.query(Model).values(Model.name, Model.id)
@@ -29,7 +29,7 @@ def get_all_models():
     return jsonify(d)
 
 
-@users_blueprint.route('/api/get_model/<int:id>', methods=['GET'])
+@users_blueprint.route('/api/get_model/<int:id>', methods=['GET'])  # получение модели по id
 def get_model(id):
     session = db_session.create_session()
     try:
@@ -45,7 +45,7 @@ def get_model(id):
         abort(401)
 
 
-@users_blueprint.route('/register/user', methods=['GET'])
+@users_blueprint.route('/register/user', methods=['GET'])  # регистрация пользователя в базу данных
 def register_user():
     try:
         session = db_session.create_session()
@@ -62,10 +62,10 @@ def register_user():
         session.commit()
         return 'Build Succed', 200
     except TypeError:
-        return 'Invalid Input', 1488
+        return 'Invalid Input', 1489
 
 
-@users_blueprint.route('/login/user', methods=['GET'])
+@users_blueprint.route('/login/user', methods=['GET'])  # авторизация пользователя в базу данных
 def login_user():
     try:
         session = db_session.create_session()
@@ -81,10 +81,10 @@ def login_user():
         return 'Invalid Input', 1488
 
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret_key'
-app.config['models_dir'] = '/Users/egorurov/PycharmProjects/backend/models'
+app = Flask(__name__)  # создание flask приложения
+app.config['SECRET_KEY'] = 'secret_key'  # ключ для конфигурации
+app.config['models_dir'] = '/Users/egorurov/PycharmProjects/backend/models'  # путь для хранения моделей
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # запуск api сервера
     app.register_blueprint(users_blueprint)
     app.run(Server, Port)
