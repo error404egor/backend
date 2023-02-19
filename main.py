@@ -4,9 +4,10 @@ from data import db_session
 from data.model import Model
 from data.user import User
 from flask import Flask, abort, send_from_directory
-from sqlalchemy.sql import text
-import random
+from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash
 import json
+import smtplib
 
 Server = 'localhost'  # api сервер
 Port = 8080  # порт регистрации
@@ -52,13 +53,14 @@ def register_user():
         session = db_session.create_session()
         username = request.form['username']
         password = request.form['password']
+        hash = generate_password_hash(password)
         email = request.form['email']
         user_find = session.query(User).filter(User.name == username)
         user_find_2 = session.query(User).filter(User.mail == email)
         if session.query(user_find.exists()).scalar() or session.query(user_find_2.exists()).scalar():
             return json.dumps({'status': 'fail', 'message': 'User or Email already registered'}), 667
         print(username)
-        user = User(name=username, mail=email, password=password)
+        user = User(name=username, mail=email, password=hash)
         session.add(user)
         session.commit()
         return json.dumps({'status': 'success', 'message': 'Registered correctly'}), 200
@@ -75,11 +77,20 @@ def login_user():
         if session.query(User).filter(User.mail == email).count() == 0:
             return json.dumps({'status': 'fail', 'message': 'User Not Found'}), 404
         user = session.query(User).filter(User.mail == email).one()
-        if password != user.password:
+        if not check_password_hash(user.password, password):
             return json.dumps({'status': 'fail', 'message': 'Incorrect Password '}), 1487
         return json.dumps({'status': 'success', 'message': 'User logined'}), 200
     except TypeError:
         return json.dumps({'status': 'fail', 'message': 'Authorization terminated due to unknown exception'}), 1490
+
+
+@users_blueprint.route('/recover_mail/<int:id>', methods=['GET'])
+def send_recovery_mail(id):
+    smtpObj = smtplib.SMTP('smtp.gmail.com', 587)
+    smtpObj.starttls()
+    smtpObj.login('alexfriedmanwp@gmail.com', 'Sasha@mamleev1')
+    smtpObj.sendmail("alexfriedmanwp@gmail.com", "sasamamleev1@gmail.com", "go to bed!")
+    smtpObj.quit()
 
 
 app = Flask(__name__)  # создание flask приложения

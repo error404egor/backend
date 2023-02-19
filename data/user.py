@@ -10,9 +10,3 @@ class User(SqlAlchemyBase):  # таблица пользователей баз�
     name = sqlalchemy.Column(sqlalchemy.String, nullable=False, default="", unique=False)  # имя пользователя
     mail = sqlalchemy.Column(sqlalchemy.String, nullable=False, default="", unique=True)  # почта пользователя
     password = sqlalchemy.Column(sqlalchemy.String, nullable=False, default="", unique=False)  # пароль пользователя
-
-    def set_password(self, password):  # функция для хеширования пароля
-        self.hashed_password = generate_password_hash(password)
-
-    def check_password(self, password):  # функция для проверки пароля
-        return check_password_hash(self.hashed_password, password)
