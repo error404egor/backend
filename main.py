@@ -9,8 +9,9 @@ from werkzeug.security import check_password_hash
 import json
 import smtplib
 
-Server = 'localhost'  # api сервер
+
 Port = 8080  # порт регистрации
+Server = 'localhost'  # api сервер
 
 
 db_session.global_init("db/data.db")  # подключение к базе данных
@@ -99,4 +100,4 @@ app.config['models_dir'] = '/Users/egorurov/PycharmProjects/backend/models'  # �
 
 if __name__ == '__main__':  # запуск api сервера
     app.register_blueprint(users_blueprint)
-    app.run(Server, Port)
+    app.run(Server, Port
