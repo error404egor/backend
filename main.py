@@ -7,6 +7,9 @@ from flask import Flask, abort, send_from_directory
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
 import json
+import uuid
+import datetime
+import jwt
 import smtplib
 
 
@@ -59,14 +62,15 @@ def register_user():
         user_find = session.query(User).filter(User.name == username)
         user_find_2 = session.query(User).filter(User.mail == email)
         if session.query(user_find.exists()).scalar() or session.query(user_find_2.exists()).scalar():
-            return json.dumps({'status': 'fail', 'message': 'User or Email already registered'}), 667
-        print(username)
-        user = User(name=username, mail=email, password=hash)
+            return json.dumps({'status': 'fail', 'message': 'User or Email already registered'}), 416
+
+        public_ide = str(uuid.uuid4()) # создание уникального id пользователя для создания jwt токенов при авторизации
+        user = User(public_id=public_ide, name=username, mail=email, password=hash)
         session.add(user)
         session.commit()
         return json.dumps({'status': 'success', 'message': 'Registered correctly'}), 200
-    except TypeError:
-        return json.dumps({'status': 'fail', 'message': 'Authorization terminated due to unknown exception'}), 1490
+    except Exception:
+        return json.dumps({'status': 'fail', 'message': 'Authorization terminated due to unknown exception'}), 400
 
 
 @users_blueprint.route('/login/user', methods=['GET'])  # авторизация пользователя в базу данных
@@ -79,10 +83,15 @@ def login_user():
             return json.dumps({'status': 'fail', 'message': 'User Not Found'}), 404
         user = session.query(User).filter(User.mail == email).one()
         if not check_password_hash(user.password, password):
-            return json.dumps({'status': 'fail', 'message': 'Incorrect Password '}), 1487
-        return json.dumps({'status': 'success', 'message': 'User logined'}), 200
-    except TypeError:
-        return json.dumps({'status': 'fail', 'message': 'Authorization terminated due to unknown exception'}), 1490
+            return json.dumps({'status': 'fail', 'message': 'Incorrect Password '}), 412
+        payload = {
+            'user_id': user.public_id,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=60*60)
+        }
+        token = jwt.encode(payload, 'secret_key', algorithm='HS256')
+        return json.dumps({'token': token}), 200
+    except Exception:
+        return json.dumps({'status': 'fail', 'message': 'Authorization terminated due to unknown exception'}), 400
 
 
 @users_blueprint.route('/recover_mail/<int:id>', methods=['GET'])
@@ -95,9 +104,9 @@ def send_recovery_mail(id):
 
 
 app = Flask(__name__)  # создание flask приложения
-app.config['SECRET_KEY'] = 'secret_key'  # ключ для конфигурации
+app.config['SECRET_KEY'] = "secret_key"  # ключ для конфигурации
 app.config['models_dir'] = '/Users/egorurov/PycharmProjects/backend/models'  # путь для хранения моделей
 
 if __name__ == '__main__':  # запуск api сервера
     app.register_blueprint(users_blueprint)
-    app.run(Server, Port
+    app.run(Server, Port)
