@@ -7,10 +7,8 @@ from flask import Flask, abort, send_from_directory
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
 import json
-import uuid
 import datetime
 import jwt
-import smtplib
 
 
 Port = 8080  # порт регистрации
@@ -64,7 +62,7 @@ def register_user():
         if session.query(user_find.exists()).scalar() or session.query(user_find_2.exists()).scalar():
             return json.dumps({'status': 'fail', 'message': 'User or Email already registered'}), 416
 
-        public_ide = str(uuid.uuid4()) # создание уникального id пользователя для создания jwt токенов при авторизации
+        public_ide = str(uuid.uuid4())  # создание уникального id пользователя для создания jwt токенов при авторизации
         user = User(public_id=public_ide, name=username, mail=email, password=hash)
         session.add(user)
         session.commit()
