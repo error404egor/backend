@@ -7,9 +7,9 @@ from flask import Flask, abort, send_from_directory
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
 import json
-import datetime
 import jwt
 import uuid
+import datetime
 
 Port = 8080  # порт регистрации
 Server = 'localhost'  # api сервер
@@ -57,7 +57,6 @@ def register_user():
         email = request.form['email']
         user_find = session.query(User).filter(User.name == username)
         user_find_2 = session.query(User).filter(User.mail == email)
-
         if session.query(user_find.exists()).scalar() or session.query(user_find_2.exists()).scalar():
             return json.dumps({'status': 'fail', 'message': 'User or Email already registered'}), 416
         public_ide = str(uuid.uuid4())  # создание уникального id пользователя для создания jwt токенов при авторизации
@@ -87,6 +86,19 @@ def login_user():
         return json.dumps({'token': token}), 200
     except Exception:
         return json.dumps({'status': 'fail', 'message': 'Authorization terminated due to unknown exception'}), 400
+
+
+@users_blueprint.route('/username-by-token', methods=['POST'])  # возвращение username по токену
+def username_by_token():
+    try:
+        token = request.form['token']
+        data = jwt.decode(token, key='secret_key', algorithms=['HS256', ])
+        if session.query(User).filter(User.public_id == data["user_id"]).count() == 0:
+            return json.dumps({'status': 'fail', 'message': 'User not found'}), 404
+        user = session.query(User).filter(User.public_id == data["user_id"]).one()
+        return json.dumps({'email': user.mail}), 200
+    except Exception:
+        return json.dumps({'status': 'fail', 'message': 'Token not found'}), 400
 
 
 app = Flask(__name__)  # создание flask приложения
