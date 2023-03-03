@@ -9,7 +9,7 @@ from werkzeug.security import check_password_hash
 import json
 import datetime
 import jwt
-
+import uuid
 
 Port = 8080  # порт регистрации
 Server = 'localhost'  # api сервер
@@ -57,9 +57,9 @@ def register_user():
         email = request.form['email']
         user_find = session.query(User).filter(User.name == username)
         user_find_2 = session.query(User).filter(User.mail == email)
+
         if session.query(user_find.exists()).scalar() or session.query(user_find_2.exists()).scalar():
             return json.dumps({'status': 'fail', 'message': 'User or Email already registered'}), 416
-
         public_ide = str(uuid.uuid4())  # создание уникального id пользователя для создания jwt токенов при авторизации
         user = User(public_id=public_ide, name=username, mail=email, password=hash)
         session.add(user)
